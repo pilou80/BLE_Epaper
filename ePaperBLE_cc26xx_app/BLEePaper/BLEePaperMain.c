@@ -1,9 +1,8 @@
 /******************************************************************************
 
- @file  simple_peripheral.c
+ @file  BLEePaperMain.c
 
- @brief This file contains the Simple BLE Peripheral sample application for use
- with the CC2650 Bluetooth Low Energy Protocol Stack.
+ @brief .
 
  Group: WCS, BTS
  Target Device: CC2650, CC2640
@@ -85,7 +84,7 @@
 
 #include "board.h"
 
-#include "simple_peripheral.h"
+#include <BLEePaperMain.h>
 
 #if defined( USE_FPGA ) || defined( DEBUG_SW_TRACE )
 #include <driverlib/ioc.h>
@@ -264,28 +263,28 @@ static uint8_t rspTxRetry = 0;
  * LOCAL FUNCTIONS
  */
 
-static void SimpleBLEPeripheral_init(void);
-static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1);
+static void BLEePaper_init(void);
+static void BLEePaper_taskFxn(UArg a0, UArg a1);
 
-static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg);
-static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg);
-static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg);
-static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState);
-static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID);
-static void SimpleBLEPeripheral_performPeriodicTask(void);
-static void SimpleBLEPeripheral_clockHandler(UArg arg);
+static uint8_t BLEePaper_processStackMsg(ICall_Hdr *pMsg);
+static uint8_t BLEePaper_processGATTMsg(gattMsgEvent_t *pMsg);
+static void BLEePaper_processAppMsg(sbpEvt_t *pMsg);
+static void BLEePaper_processStateChangeEvt(gaprole_States_t newState);
+static void BLEePaper_processCharValueChangeEvt(uint8_t paramID);
+static void BLEePaper_performPeriodicTask(void);
+static void BLEePaper_clockHandler(UArg arg);
 
-static void SimpleBLEPeripheral_sendAttRsp(void);
-static void SimpleBLEPeripheral_freeAttRsp(uint8_t status);
+static void BLEePaper_sendAttRsp(void);
+static void BLEePaper_freeAttRsp(uint8_t status);
 
-static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState);
+static void BLEePaper_stateChangeCB(gaprole_States_t newState);
 #ifndef FEATURE_OAD_ONCHIP
-static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID);
+static void BLEePaper_charValueChangeCB(uint8_t paramID);
 #endif //!FEATURE_OAD_ONCHIP
-static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state);
+static void BLEePaper_enqueueMsg(uint8_t event, uint8_t state);
 
 #ifdef FEATURE_OAD
-void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
+void BLEePaper_processOadWriteCB(uint8_t event, uint16_t connHandle,
         uint8_t *pData);
 #endif //FEATURE_OAD
 
@@ -299,27 +298,27 @@ extern void AssertHandler(uint8 assertCause, uint8 assertSubcause);
  */
 
 // GAP Role Callbacks
-static gapRolesCBs_t SimpleBLEPeripheral_gapRoleCBs = {
-        SimpleBLEPeripheral_stateChangeCB     // Profile State Change Callbacks
+static gapRolesCBs_t BLEePaper_gapRoleCBs = {
+        BLEePaper_stateChangeCB     // Profile State Change Callbacks
         };
 
 // GAP Bond Manager Callbacks
-static gapBondCBs_t simpleBLEPeripheral_BondMgrCBs = {
+static gapBondCBs_t BLEePaper_BondMgrCBs = {
 NULL, // Passcode callback (not used by application)
         NULL  // Pairing / Bonding state Callback (not used by application)
         };
 
 // Simple GATT Profile Callbacks
 #ifndef FEATURE_OAD_ONCHIP
-static simpleProfileCBs_t SimpleBLEPeripheral_simpleProfileCBs = {
-        SimpleBLEPeripheral_charValueChangeCB // Characteristic value change callback
+static simpleProfileCBs_t BLEePaper_simpleProfileCBs = {
+        BLEePaper_charValueChangeCB // Characteristic value change callback
         };
 #endif //!FEATURE_OAD_ONCHIP
 
 #ifdef FEATURE_OAD
-static oadTargetCBs_t simpleBLEPeripheral_oadCBs =
+static oadTargetCBs_t BLEePaper_oadCBs =
 {
-    SimpleBLEPeripheral_processOadWriteCB // Write Callback.
+    BLEePaper_processOadWriteCB // Write Callback.
 };
 #endif //FEATURE_OAD
 
@@ -328,7 +327,7 @@ static oadTargetCBs_t simpleBLEPeripheral_oadCBs =
  */
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_createTask
+ * @fn      BLEePaper_createTask
  *
  * @brief   Task creation function for the Simple BLE Peripheral.
  *
@@ -336,7 +335,7 @@ static oadTargetCBs_t simpleBLEPeripheral_oadCBs =
  *
  * @return  None.
  */
-void SimpleBLEPeripheral_createTask(void)
+void BLEePaper_createTask(void)
 {
     Task_Params taskParams;
 
@@ -346,11 +345,11 @@ void SimpleBLEPeripheral_createTask(void)
     taskParams.stackSize = SBP_TASK_STACK_SIZE;
     taskParams.priority = SBP_TASK_PRIORITY;
 
-    Task_construct(&sbpTask, SimpleBLEPeripheral_taskFxn, &taskParams, NULL);
+    Task_construct(&sbpTask, BLEePaper_taskFxn, &taskParams, NULL);
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_init
+ * @fn      BLEePaper_init
  *
  * @brief   Called during initialization and contains application
  *          specific initialization (ie. hardware initialization/setup,
@@ -361,7 +360,7 @@ void SimpleBLEPeripheral_createTask(void)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_init(void)
+static void BLEePaper_init(void)
 {
     // ******************************************************************
     // N0 STACK API CALLS CAN OCCUR BEFORE THIS CALL TO ICall_registerApp
@@ -396,7 +395,7 @@ static void SimpleBLEPeripheral_init(void)
     appMsgQueue = Util_constructQueue(&appMsg);
 
     // Create one-shot clocks for internal periodic events.
-    Util_constructClock(&periodicClock, SimpleBLEPeripheral_clockHandler,
+    Util_constructClock(&periodicClock, BLEePaper_clockHandler,
     SBP_PERIODIC_EVT_PERIOD,
                         0, false, SBP_PERIODIC_EVT);
 
@@ -489,7 +488,7 @@ static void SimpleBLEPeripheral_init(void)
 
 #ifdef FEATURE_OAD
     VOID OAD_addService();                 // OAD Profile
-    OAD_register((oadTargetCBs_t *)&simpleBLEPeripheral_oadCBs);
+    OAD_register((oadTargetCBs_t *)&BLEePaper_oadCBs);
     hOadQ = Util_constructQueue(&oadQ);
 #endif //FEATURE_OAD
 
@@ -519,14 +518,14 @@ static void SimpleBLEPeripheral_init(void)
     }
 
     // Register callback with SimpleGATTprofile
-    SimpleProfile_RegisterAppCBs(&SimpleBLEPeripheral_simpleProfileCBs);
+    SimpleProfile_RegisterAppCBs(&BLEePaper_simpleProfileCBs);
 #endif //!FEATURE_OAD_ONCHIP
 
     // Start the Device
-    VOID GAPRole_StartDevice(&SimpleBLEPeripheral_gapRoleCBs);
+    VOID GAPRole_StartDevice(&BLEePaper_gapRoleCBs);
 
     // Start Bond Manager
-    VOID GAPBondMgr_Register(&simpleBLEPeripheral_BondMgrCBs);
+    VOID GAPBondMgr_Register(&BLEePaper_BondMgrCBs);
 
     // Register with GAP for HCI/Host messages
     GAP_RegisterForMsgs(selfEntity);
@@ -548,7 +547,7 @@ static void SimpleBLEPeripheral_init(void)
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_taskFxn
+ * @fn      BLEePaper_taskFxn
  *
  * @brief   Application task entry point for the Simple BLE Peripheral.
  *
@@ -556,10 +555,10 @@ static void SimpleBLEPeripheral_init(void)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1)
+static void BLEePaper_taskFxn(UArg a0, UArg a1)
 {
     // Initialize application
-    SimpleBLEPeripheral_init();
+    BLEePaper_init();
 
     // Application main loop
     for (;;)
@@ -591,13 +590,13 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1)
                         if (pEvt->event_flag & SBP_CONN_EVT_END_EVT)
                         {
                             // Try to retransmit pending ATT Response (if any)
-                            SimpleBLEPeripheral_sendAttRsp();
+                            BLEePaper_sendAttRsp();
                         }
                     }
                     else
                     {
                         // Process inter-task message
-                        safeToDealloc = SimpleBLEPeripheral_processStackMsg(
+                        safeToDealloc = BLEePaper_processStackMsg(
                                 (ICall_Hdr *) pMsg);
                     }
                 }
@@ -615,7 +614,7 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1)
                 if (pMsg)
                 {
                     // Process message.
-                    SimpleBLEPeripheral_processAppMsg(pMsg);
+                    BLEePaper_processAppMsg(pMsg);
 
                     // Free the space from the message.
                     ICall_free(pMsg);
@@ -630,7 +629,7 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1)
             Util_startClock(&periodicClock);
 
             // Perform periodic application task
-            SimpleBLEPeripheral_performPeriodicTask();
+            BLEePaper_performPeriodicTask();
         }
 
 #ifdef FEATURE_OAD
@@ -657,7 +656,7 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1)
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processStackMsg
+ * @fn      BLEePaper_processStackMsg
  *
  * @brief   Process an incoming stack message.
  *
@@ -665,7 +664,7 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1)
  *
  * @return  TRUE if safe to deallocate incoming message, FALSE otherwise.
  */
-static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg)
+static uint8_t BLEePaper_processStackMsg(ICall_Hdr *pMsg)
 {
     uint8_t safeToDealloc = TRUE;
 
@@ -673,7 +672,7 @@ static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg)
     {
     case GATT_MSG_EVENT:
         // Process GATT message
-        safeToDealloc = SimpleBLEPeripheral_processGATTMsg(
+        safeToDealloc = BLEePaper_processGATTMsg(
                 (gattMsgEvent_t *) pMsg);
         break;
 
@@ -707,13 +706,13 @@ static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg)
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processGATTMsg
+ * @fn      BLEePaper_processGATTMsg
  *
  * @brief   Process GATT messages and events.
  *
  * @return  TRUE if safe to deallocate incoming message, FALSE otherwise.
  */
-static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg)
+static uint8_t BLEePaper_processGATTMsg(gattMsgEvent_t *pMsg)
 {
     // See if GATT server was unable to transmit an ATT response
     if (pMsg->hdr.status == blePending)
@@ -724,7 +723,7 @@ static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg)
         SBP_CONN_EVT_END_EVT) == SUCCESS)
         {
             // First free any pending response
-            SimpleBLEPeripheral_freeAttRsp(FAILURE);
+            BLEePaper_freeAttRsp(FAILURE);
 
             // Hold on to the response message for retransmission
             pAttRsp = pMsg;
@@ -756,7 +755,7 @@ static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg)
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_sendAttRsp
+ * @fn      BLEePaper_sendAttRsp
  *
  * @brief   Send a pending ATT response message.
  *
@@ -764,7 +763,7 @@ static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg)
  *
  * @return  none
  */
-static void SimpleBLEPeripheral_sendAttRsp(void)
+static void BLEePaper_sendAttRsp(void)
 {
     // See if there's a pending ATT Response to be transmitted
     if (pAttRsp != NULL)
@@ -784,7 +783,7 @@ static void SimpleBLEPeripheral_sendAttRsp(void)
             HCI_EXT_ConnEventNoticeCmd(pAttRsp->connHandle, selfEntity, 0);
 
             // We're done with the response message
-            SimpleBLEPeripheral_freeAttRsp(status);
+            BLEePaper_freeAttRsp(status);
         }
         else
         {
@@ -795,7 +794,7 @@ static void SimpleBLEPeripheral_sendAttRsp(void)
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_freeAttRsp
+ * @fn      BLEePaper_freeAttRsp
  *
  * @brief   Free ATT response message.
  *
@@ -803,7 +802,7 @@ static void SimpleBLEPeripheral_sendAttRsp(void)
  *
  * @return  none
  */
-static void SimpleBLEPeripheral_freeAttRsp(uint8_t status)
+static void BLEePaper_freeAttRsp(uint8_t status)
 {
     // See if there's a pending ATT response message
     if (pAttRsp != NULL)
@@ -831,7 +830,7 @@ static void SimpleBLEPeripheral_freeAttRsp(uint8_t status)
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processAppMsg
+ * @fn      BLEePaper_processAppMsg
  *
  * @brief   Process an incoming callback from a profile.
  *
@@ -839,17 +838,17 @@ static void SimpleBLEPeripheral_freeAttRsp(uint8_t status)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg)
+static void BLEePaper_processAppMsg(sbpEvt_t *pMsg)
 {
     switch (pMsg->hdr.event)
     {
     case SBP_STATE_CHANGE_EVT:
-        SimpleBLEPeripheral_processStateChangeEvt(
+        BLEePaper_processStateChangeEvt(
                 (gaprole_States_t) pMsg->hdr.state);
         break;
 
     case SBP_CHAR_CHANGE_EVT:
-        SimpleBLEPeripheral_processCharValueChangeEvt(pMsg->hdr.state);
+        BLEePaper_processCharValueChangeEvt(pMsg->hdr.state);
         break;
 
     default:
@@ -859,7 +858,7 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg)
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_stateChangeCB
+ * @fn      BLEePaper_stateChangeCB
  *
  * @brief   Callback from GAP Role indicating a role state change.
  *
@@ -867,13 +866,13 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState)
+static void BLEePaper_stateChangeCB(gaprole_States_t newState)
 {
-    SimpleBLEPeripheral_enqueueMsg(SBP_STATE_CHANGE_EVT, newState);
+    BLEePaper_enqueueMsg(SBP_STATE_CHANGE_EVT, newState);
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processStateChangeEvt
+ * @fn      BLEePaper_processStateChangeEvt
  *
  * @brief   Process a pending GAP Role state change event.
  *
@@ -881,7 +880,7 @@ static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
+static void BLEePaper_processStateChangeEvt(gaprole_States_t newState)
 {
 #ifdef PLUS_BROADCASTER
     static bool firstConnFlag = false;
@@ -945,7 +944,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
             // Reset flag for next connection.
             firstConnFlag = false;
 
-            SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+            BLEePaper_freeAttRsp(bleNotConnected);
         }
         break;
 #endif //PLUS_BROADCASTER
@@ -1004,7 +1003,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 
     case GAPROLE_WAITING:
         Util_stopClock(&periodicClock);
-        SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+        BLEePaper_freeAttRsp(bleNotConnected);
 
         Display_print0(dispHandle, 2, 0, "Disconnected");
 
@@ -1013,7 +1012,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
         break;
 
     case GAPROLE_WAITING_AFTER_TIMEOUT:
-        SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+        BLEePaper_freeAttRsp(bleNotConnected);
 
         Display_print0(dispHandle, 2, 0, "Timed Out");
 
@@ -1041,7 +1040,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 
 #ifndef FEATURE_OAD_ONCHIP
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_charValueChangeCB
+ * @fn      BLEePaper_charValueChangeCB
  *
  * @brief   Callback from Simple Profile indicating a characteristic
  *          value change.
@@ -1050,14 +1049,14 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID)
+static void BLEePaper_charValueChangeCB(uint8_t paramID)
 {
-    SimpleBLEPeripheral_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID);
+    BLEePaper_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID);
 }
 #endif //!FEATURE_OAD_ONCHIP
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processCharValueChangeEvt
+ * @fn      BLEePaper_processCharValueChangeEvt
  *
  * @brief   Process a pending Simple Profile characteristic value change
  *          event.
@@ -1066,7 +1065,7 @@ static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID)
+static void BLEePaper_processCharValueChangeEvt(uint8_t paramID)
 {
 #ifndef FEATURE_OAD_ONCHIP
     uint8_t newValue;
@@ -1093,7 +1092,7 @@ static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID)
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_performPeriodicTask
+ * @fn      BLEePaper_performPeriodicTask
  *
  * @brief   Perform a periodic application task. This function gets called
  *          every five seconds (SBP_PERIODIC_EVT_PERIOD). In this example,
@@ -1105,7 +1104,7 @@ static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_performPeriodicTask(void)
+static void BLEePaper_performPeriodicTask(void)
 {
 #ifndef FEATURE_OAD_ONCHIP
     uint8_t valueToCopy;
@@ -1125,7 +1124,7 @@ static void SimpleBLEPeripheral_performPeriodicTask(void)
 
 #ifdef FEATURE_OAD
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processOadWriteCB
+ * @fn      BLEePaper_processOadWriteCB
  *
  * @brief   Process a write request to the OAD profile.
  *
@@ -1137,7 +1136,7 @@ static void SimpleBLEPeripheral_performPeriodicTask(void)
  *
  * @return  None.
  */
-void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
+void BLEePaper_processOadWriteCB(uint8_t event, uint16_t connHandle,
         uint8_t *pData)
 {
     oadTargetWrite_t *oadWriteEvt = ICall_malloc( sizeof(oadTargetWrite_t) +
@@ -1164,7 +1163,7 @@ void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
 #endif //FEATURE_OAD
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_clockHandler
+ * @fn      BLEePaper_clockHandler
  *
  * @brief   Handler function for clock timeouts.
  *
@@ -1172,7 +1171,7 @@ void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_clockHandler(UArg arg)
+static void BLEePaper_clockHandler(UArg arg)
 {
     // Store the event.
     events |= arg;
@@ -1182,7 +1181,7 @@ static void SimpleBLEPeripheral_clockHandler(UArg arg)
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_enqueueMsg
+ * @fn      BLEePaper_enqueueMsg
  *
  * @brief   Creates a message and puts the message in RTOS queue.
  *
@@ -1191,7 +1190,7 @@ static void SimpleBLEPeripheral_clockHandler(UArg arg)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state)
+static void BLEePaper_enqueueMsg(uint8_t event, uint8_t state)
 {
     sbpEvt_t *pMsg;
 

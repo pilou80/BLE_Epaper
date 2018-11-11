@@ -1,9 +1,8 @@
 /******************************************************************************
 
- @file  simple_peripheral.h
+ @file  BLEePaperMain.h
 
- @brief This file contains the Simple BLE Peripheral sample application
-        definitions and prototypes.
+ @brief .
 
  Group: WCS, BTS
  Target Device: CC2650, CC2640
@@ -45,8 +44,8 @@
  Release Date: 2018-04-02 18:03:35
  *****************************************************************************/
 
-#ifndef SIMPLEBLEPERIPHERAL_H
-#define SIMPLEBLEPERIPHERAL_H
+#ifndef BLEEPAPERMAIN_H
+#define BLEEPAPERMAIN_H
 
 #ifdef __cplusplus
 extern "C"
@@ -76,7 +75,7 @@ extern "C"
 /*
  * Task creation function for the Simple BLE Peripheral.
  */
-extern void SimpleBLEPeripheral_createTask(void);
+extern void BLEePaper_createTask(void);
 
 
 /*********************************************************************
@@ -86,4 +85,4 @@ extern void SimpleBLEPeripheral_createTask(void);
 }
 #endif
 
-#endif /* SIMPLEBLEPERIPHERAL_H */
+#endif /* BLEEPAPERMAIN_H */

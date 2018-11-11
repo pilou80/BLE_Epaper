@@ -46,6 +46,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.OPT_FOR_SPEED.889980414" name="Speed vs. size trade-offs (--opt_for_speed, -mf)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.OPT_FOR_SPEED" value="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.OPT_FOR_SPEED.0" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.INCLUDE_PATH.1704053724" name="Add dir to #include search path (--include_path, -I)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.INCLUDE_PATH" valueType="includePath">
 									<listOptionValue builtIn="false" value="${INHERITED_INCLUDE_PATH}"/>
+									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/board}"/>
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/BLEePaper}"/>
 									<listOptionValue builtIn="false" value="${CG_TOOL_ROOT}/include"/>
 									<listOptionValue builtIn="false" value="${SRC_EX}/examples/simple_peripheral/cc26xx/app"/>
@@ -60,7 +61,6 @@
 									<listOptionValue builtIn="false" value="${SRC_COMMON}/heapmgr"/>
 									<listOptionValue builtIn="false" value="${SRC_BLE_CORE}/controller/cc26xx/inc"/>
 									<listOptionValue builtIn="false" value="${SRC_COMMON}/hal/src/target/_common"/>
-									<listOptionValue builtIn="false" value="${SRC_EX}/target"/>
 									<listOptionValue builtIn="false" value="${SRC_COMMON}/hal/src/target/_common/cc26xx"/>
 									<listOptionValue builtIn="false" value="${SRC_COMMON}/hal/src/inc"/>
 									<listOptionValue builtIn="false" value="${SRC_COMMON}/osal/src/inc"/>
@@ -76,6 +76,8 @@
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.GCC.278098086" name="Enable support for GCC extensions (DEPRECATED) (--gcc)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.GCC" value="true" valueType="boolean"/>
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.DEFINE.1984639889" name="Pre-define NAME (--define, -D)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.DEFINE" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="${INHERITED_SYMBOLS}"/>
+									<listOptionValue builtIn="false" value="EPD_WIDTH=128"/>
+									<listOptionValue builtIn="false" value="EPD_HEIGHT=296"/>
 									<listOptionValue builtIn="false" value="BOARD_DISPLAY_EXCLUDE_LCD"/>
 									<listOptionValue builtIn="false" value="BOARD_DISPLAY_EXCLUDE_UART"/>
 									<listOptionValue builtIn="false" value="CC2650_LAUNCHXL"/>
